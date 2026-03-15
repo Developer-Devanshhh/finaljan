@@ -1,0 +1,17 @@
+.env
+.env.local
+__pycache__/
+*.pyc
+node_modules/
+.next/
+*.pkl
+uploads/
+venv/
+backend/.venv
+# Training model checkpoints (large binary files)
+backend/training/models/
+
+# Keys and logs
+*.json
+*.log
+project_export.txt

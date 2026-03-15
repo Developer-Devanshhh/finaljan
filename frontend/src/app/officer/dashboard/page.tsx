@@ -35,6 +35,7 @@ import {
   DEPT_NAMES,
   PRIORITY_ICONS,
 } from "@/lib/dashboard-types";
+import { officerApi } from "@/lib/api";
 
 // Mock API functions - replace with actual API calls
 const mockOfficerApi = {
@@ -101,14 +102,14 @@ const mockOfficerApi = {
       id: "6754a1b2c3d4e5f6g7h8i9j3",
       ticket_code: "JV-001237",
       status: "OPEN",
-      description: "Garbage accumulation near Puratchi Thalaivi Park",
+      description: "Garbage pile-up near vegetable market",
       dept_id: "SWM",
-      issue_category: "Solid Waste",
-      priority_label: "MEDIUM",
-      priority_score: 45,
-      created_at: "2024-11-23T11:45:00Z",
-      sla_deadline: "2024-11-30T11:45:00Z",
-      ward_id: 3,
+      issue_category: "Waste Processing",
+      priority_label: "LOW",
+      priority_score: 25,
+      created_at: "2024-11-23T08:45:00Z",
+      sla_deadline: "2024-11-30T08:45:00Z",
+      ward_id: 2,
     },
     {
       id: "6754a1b2c3d4e5f6g7h8i9j4",
@@ -126,9 +127,30 @@ const mockOfficerApi = {
   ],
 
   getFieldStaff: async (): Promise<FieldStaff[]> => [
-    { id: "staff1", name: "Raj Kumar", email: "raj@janvedha.com", role: "Technician" },
-    { id: "staff2", name: "Priya Singh", email: "priya@janvedha.com", role: "Technician" },
-    { id: "staff3", name: "Arjun Nair", email: "arjun@janvedha.com", role: "Inspector" },
+    {
+      id: "t101",
+      name: "Ramesh Kannan",
+      role: "Electrician",
+      dept_id: "ELEC",
+      phone: "+91-9876543210",
+      active_tasks: 2,
+    },
+    {
+      id: "t102",
+      name: "Murugan M.",
+      role: "Plumber",
+      dept_id: "WTR",
+      phone: "+91-9876543211",
+      active_tasks: 1,
+    },
+    {
+      id: "t103",
+      name: "Suresh P.",
+      role: "Civil Engineer",
+      dept_id: "PWD",
+      phone: "+91-9876543212",
+      active_tasks: 3,
+    },
   ],
 };
 
@@ -157,14 +179,29 @@ export default function OfficerDashboard({ userOverride, forcedRole }: OfficerDa
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [summaryData, ticketsData, staffData] = await Promise.all([
-          mockOfficerApi.getDashboardSummary(),
-          mockOfficerApi.getTickets(),
-          mockOfficerApi.getFieldStaff(),
+        // Attempt to fetch from real API gracefully falling back to mock UI
+        const [realSummary, realTickets, realStaff] = await Promise.allSettled([
+          officerApi.getDashboardSummary().then(res => res.data),
+          officerApi.getTickets().then(res => res.data),
+          officerApi.getFieldStaff().then(res => res.data),
         ]);
+
+        const ticketsData = realTickets.status === "fulfilled" && realTickets.value?.length > 0 
+          ? realTickets.value 
+          : await mockOfficerApi.getTickets();
+          
+        const summaryData = realSummary.status === "fulfilled" && realSummary.value?.total > 0
+          ? realSummary.value
+          : await mockOfficerApi.getDashboardSummary();
+          
+        const staffData = realStaff.status === "fulfilled" && realStaff.value?.length > 0
+          ? realStaff.value
+          : await mockOfficerApi.getFieldStaff();
+
         setSummary(summaryData);
         setTickets(ticketsData);
         setFieldStaff(staffData);
+
       } catch (error) {
         console.error("Failed to load dashboard data:", error);
       } finally {

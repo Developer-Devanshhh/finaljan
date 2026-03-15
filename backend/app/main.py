@@ -96,3 +96,9 @@ async def health():
         "city": settings.CITY_NAME,
         "db": "mongodb",
     }
+
+@app.get("/")
+async def root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/docs")
+

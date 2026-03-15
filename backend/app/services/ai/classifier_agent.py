@@ -109,7 +109,8 @@ def _get_finetuned_pipeline():
         if not _FINETUNED_MODEL_DIR.exists():
             return None  # not trained yet
         try:
-            from transformers import pipeline as hf_pipeline
+            import transformers
+            hf_pipeline = transformers.pipeline
             logger.info("Loading fine-tuned JanVedha classifier from %s …", _FINETUNED_MODEL_DIR)
             _finetuned_pipeline = hf_pipeline(
                 "text-classification",
@@ -117,7 +118,7 @@ def _get_finetuned_pipeline():
                 tokenizer=str(_FINETUNED_MODEL_DIR),
             )
             logger.info("✅  Fine-tuned model loaded.")
-        except Exception as exc:
+        except (ImportError, Exception) as exc:
             logger.warning("Could not load fine-tuned model: %s — using zero-shot.", exc)
             _finetuned_pipeline = None
     return _finetuned_pipeline
@@ -160,12 +161,15 @@ def _finetuned_classify(text: str) -> ClassificationResult:
 def _get_zeroshot_pipeline():
     global _zeroshot_pipeline
     if _zeroshot_pipeline is None:
-        from transformers import pipeline
-        logger.info("Loading mDeBERTa-v3-base-mnli-xnli zero-shot model (cached)...")
-        _zeroshot_pipeline = pipeline(
-            "zero-shot-classification",
-            model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
-        )
+        try:
+            from transformers import pipeline
+            logger.info("Loading mDeBERTa-v3-base-mnli-xnli zero-shot model (cached)...")
+            _zeroshot_pipeline = pipeline(
+                "zero-shot-classification",
+                model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli"
+            )
+        except (ImportError, Exception):
+            return None
     return _zeroshot_pipeline
 
 

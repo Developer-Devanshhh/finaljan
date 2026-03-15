@@ -12,6 +12,8 @@ backend/.venv
 backend/training/models/
 
 # Keys and logs
-*.json
+# Ignore specific service account or data keys, but allow config jsons
+*-3147d07efdf6.json
+serviceAccountKey.json
 *.log
 project_export.txt

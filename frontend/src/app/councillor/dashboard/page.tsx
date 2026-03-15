@@ -30,6 +30,8 @@ import {
   PRIORITY_ICONS,
 } from "@/lib/dashboard-types";
 
+import { councillorApi } from "@/lib/api";
+
 // Mock API
 const mockCouncillorApi = {
   getWardSummary: async (): Promise<WardSummary> => ({
@@ -199,18 +201,39 @@ export default function CouncillorDashboard() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [ward, dept, trend, issues, overdue] = await Promise.all([
-          mockCouncillorApi.getWardSummary(),
-          mockCouncillorApi.getDepartmentPerformance(),
-          mockCouncillorApi.getSatisfactionTrend(),
-          mockCouncillorApi.getTopIssues(),
-          mockCouncillorApi.getOverdueTickets(),
+        const [realWard, realDept, realTrend, realIssues, realOverdue] = await Promise.allSettled([
+          councillorApi.getWardSummary().then(res => res.data),
+          councillorApi.getDeptPerformance().then(res => res.data),
+          councillorApi.getSatisfactionTrend().then(res => res.data),
+          councillorApi.getTopIssues().then(res => res.data),
+          councillorApi.getOverdueTickets().then(res => res.data),
         ]);
-        setWardSummary(ward);
-        setDeptPerf(dept);
-        setSatisfactionTrend(trend);
-        setTopIssues(issues);
-        setOverdueTickets(overdue);
+
+        const wardData = realWard.status === "fulfilled" && realWard.value?.total > 0
+          ? realWard.value
+          : await mockCouncillorApi.getWardSummary();
+
+        const deptData = realDept.status === "fulfilled" && realDept.value?.length > 0
+          ? realDept.value
+          : await mockCouncillorApi.getDepartmentPerformance();
+
+        const trendData = realTrend.status === "fulfilled" && realTrend.value?.length > 0
+          ? realTrend.value
+          : await mockCouncillorApi.getSatisfactionTrend();
+
+        const issuesData = realIssues.status === "fulfilled" && realIssues.value?.length > 0
+          ? realIssues.value
+          : await mockCouncillorApi.getTopIssues();
+
+        const overdueData = realOverdue.status === "fulfilled" && realOverdue.value?.length > 0
+          ? realOverdue.value
+          : await mockCouncillorApi.getOverdueTickets();
+
+        setWardSummary(wardData);
+        setDeptPerf(deptData);
+        setSatisfactionTrend(trendData);
+        setTopIssues(issuesData);
+        setOverdueTickets(overdueData);
       } catch (error) {
         console.error("Failed to load dashboard:", error);
       } finally {
@@ -220,6 +243,7 @@ export default function CouncillorDashboard() {
 
     loadDashboard();
   }, []);
+
 
   if (loading) {
     return (

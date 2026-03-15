@@ -27,6 +27,8 @@ import {
   DEPT_NAMES,
   PRIORITY_ICONS,
 } from "@/lib/dashboard-types";
+import { commissionerApi } from "@/lib/api";
+
 
 // Mock API
 const mockCommissionerApi = {
@@ -91,13 +93,36 @@ const mockCommissionerApi = {
     {
       id: "3",
       ticket_code: "JV-002297",
-      dept_id: "HLTH",
-      issue_category: "Health Hazard",
-      priority_label: "CRITICAL",
+      priority_score: 95,
+      days_open: 8,
+      issue_category: "Main Pipe Burst",
+    },
+    {
+      id: "c3",
+      ticket_code: "JV-004312",
+      dept_id: "ELEC",
+      ward_id: 2,
       priority_score: 92,
-      ward_id: 4,
-      days_overdue: 3,
-      estimated_cost: 95000,
+      days_open: 4,
+      issue_category: "Transformer Burn",
+    },
+    {
+      id: "c4",
+      ticket_code: "JV-004299",
+      dept_id: "HLTH",
+      ward_id: 5,
+      priority_score: 89,
+      days_open: 7,
+      issue_category: "Dengue Outbreak",
+    },
+    {
+      id: "c5",
+      ticket_code: "JV-004221",
+      dept_id: "SWM",
+      ward_id: 1,
+      priority_score: 87,
+      days_open: 6,
+      issue_category: "Toxic Dump",
     },
   ],
 };
@@ -147,27 +172,27 @@ function BudgetBurnChart({ data }: { data: CommissionerWeekData[] }) {
 
       {/* Bars */}
       {data.map((d, i) => {
-        const x = pad + (i * xStep + (xStep - barWidth) / 2);
+        const x = pad + i * xStep + (xStep - barWidth) / 2;
         const y = yScale(d.budget_spent);
-        const height = H - pad - y;
+        const barH = H - pad - y;
         return (
           <g key={i}>
             <rect
               x={x}
               y={y}
               width={barWidth}
-              height={height}
-              fill="url(#budgetGrad)"
+              height={Math.max(barH, 0)}
+              fill="#10b981"
               rx="2"
             />
             <text
               x={x + barWidth / 2}
               y={H - 5}
               textAnchor="middle"
-              fontSize="10"
+              fontSize="9"
               fill="#9ca3af"
             >
-              {d.week_label.split(" ")[1]}
+              {d.week_label.replace("Week ", "W")}
             </text>
           </g>
         );
@@ -192,16 +217,33 @@ export default function CommissionerDashboard() {
   useEffect(() => {
     const loadDashboard = async () => {
       try {
-        const [s, wp, br, ct] = await Promise.all([
-          mockCommissionerApi.getCitySummary(),
-          mockCommissionerApi.getWardPerformance(),
-          mockCommissionerApi.getBudgetBurnRate(10),
-          mockCommissionerApi.getCriticalTickets(20),
+        const [realS, realWp, realBr, realCt] = await Promise.allSettled([
+          commissionerApi.getCitySummary().then(res => res.data),
+          commissionerApi.getWardPerformance().then(res => res.data),
+          commissionerApi.getBudgetBurnRate(10).then(res => res.data),
+          commissionerApi.getCriticalOpenTickets(20).then(res => res.data),
         ]);
-        setSummary(s);
-        setWardPerf(wp);
-        setBurnRate(br);
-        setCriticalTickets(ct);
+
+        const summaryData = realS.status === "fulfilled" && realS.value?.total_tickets > 0
+          ? realS.value
+          : await mockCommissionerApi.getCitySummary();
+
+        const wardPerfData = realWp.status === "fulfilled" && realWp.value?.length > 0
+          ? realWp.value
+          : await mockCommissionerApi.getWardPerformance();
+
+        const burnRateData = realBr.status === "fulfilled" && realBr.value?.length > 0
+          ? realBr.value
+          : await mockCommissionerApi.getBudgetBurnRate(10);
+
+        const criticalData = realCt.status === "fulfilled" && realCt.value?.length > 0
+          ? realCt.value
+          : await mockCommissionerApi.getCriticalTickets(20);
+
+        setSummary(summaryData);
+        setWardPerf(wardPerfData);
+        setBurnRate(burnRateData);
+        setCriticalTickets(criticalData);
       } catch (error) {
         console.error("Failed to load commissioner dashboard:", error);
       } finally {

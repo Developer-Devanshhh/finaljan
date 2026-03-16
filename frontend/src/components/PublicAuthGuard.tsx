@@ -17,11 +17,12 @@ export default function PublicAuthGuard({ children }: { children: React.ReactNod
     useEffect(() => {
         if (!loading && isMounted) {
             // These paths do not require authentication
-            const publicPaths = ["/user-login", "/login", "/signup"];
+            const publicPaths = ["/", "/user-login", "/login", "/signup", "/map", "/track", "/ward-performance"];
+            const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith("/track/");
             // These paths have their own authentications/guards
-            const isOfficerOrAdminRoute = pathname.startsWith("/officer") || pathname.startsWith("/department") || pathname.startsWith("/councillor");
+            const isOfficerOrAdminRoute = pathname.startsWith("/officer") || pathname.startsWith("/department") || pathname.startsWith("/councillor") || pathname.startsWith("/commissioner");
 
-            if (!user && !publicPaths.includes(pathname) && !isOfficerOrAdminRoute) {
+            if (!user && !isPublicPath && !isOfficerOrAdminRoute) {
                 router.replace("/user-login");
             }
         }
@@ -35,11 +36,12 @@ export default function PublicAuthGuard({ children }: { children: React.ReactNod
         );
     }
 
-    const publicPaths = ["/user-login", "/login", "/signup"];
-    const isOfficerOrAdminRoute = pathname.startsWith("/officer") || pathname.startsWith("/department") || pathname.startsWith("/councillor");
+    const publicPaths = ["/", "/user-login", "/login", "/signup", "/map", "/track", "/ward-performance"];
+    const isPublicPath = publicPaths.includes(pathname) || pathname.startsWith("/track/");
+    const isOfficerOrAdminRoute = pathname.startsWith("/officer") || pathname.startsWith("/department") || pathname.startsWith("/councillor") || pathname.startsWith("/commissioner");
 
     // If waiting for redirect, render nothing
-    if (!user && !publicPaths.includes(pathname) && !isOfficerOrAdminRoute) {
+    if (!user && !isPublicPath && !isOfficerOrAdminRoute) {
         return null;
     }
 

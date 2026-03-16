@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import NavBar from "@/components/NavBar";
@@ -6,11 +7,27 @@ import { Toaster } from "react-hot-toast";
 import ChatWidget from "@/features/chatbot/ChatWidget";
 import PublicAuthGuard from "@/components/PublicAuthGuard";
 
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "JanVedha AI — Smart Civic Issue Management",
+  title: "JanVedha AI - Smart Civic Issue Management",
   description:
-    "AI-powered civic complaint management. Submit issues, track resolutions, and hold local governance accountable.",
-  keywords: "civic issues, complaints, ward, municipality, AI",
+    "AI-powered civic complaint management platform. Submit issues, track resolutions, and hold local governance accountable with transparency.",
+  keywords: "civic issues, complaints, ward, municipality, AI, governance, transparency",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#3b82f6",
 };
 
 export default function RootLayout({
@@ -20,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-slate-50 text-gray-900 antialiased">
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-slate-50 text-gray-900 antialiased font-sans`}>
         <AuthProvider>
           <PublicAuthGuard>
             <NavBar />

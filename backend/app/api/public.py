@@ -3,6 +3,7 @@ Public API — citizen-facing endpoints.
 
 Fully rewritten to use MongoDB (Beanie) + the full AI pipeline.
 """
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional

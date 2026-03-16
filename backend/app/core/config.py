@@ -67,6 +67,9 @@ class Settings(BaseSettings):
     # App
     ENVIRONMENT: str = "development"
     CITY_NAME: str = "Chennai"
+    
+    # CORS
+    ALLOWED_ORIGINS: str = ""  # Comma-separated list, empty = allow all
 
     class Config:
         env_file = ".env"
